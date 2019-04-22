@@ -1,9 +1,12 @@
 {
     "compilerOptions": {
-        "outFile": "build/physics.js",
-        "sourceMap": true
-    },
-    "include": [
-        "src/**/*"
-    ]
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "outFile": "./build/physics.js",
+        "sourceRoot": "./src/",
+        "rootDir": "./src/",
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "module": "none"
+    }
 }
