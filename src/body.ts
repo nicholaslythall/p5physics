@@ -1,3 +1,5 @@
+/// <reference path="vector.ts" />
+
 class Body {
   constructor(shape, density) {
     this.id = unqiueId()

@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "outFile": "build/physics.js",
+        "sourceMap": true
+    },
+    "include": [
+        "src/**/*"
+    ]
+}
