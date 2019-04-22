@@ -1,4 +1,4 @@
-function clamp(minimum, maximum, value) {
+function clamp(minimum: number, maximum: number, value: number) {
   return min(max(minimum, value), maximum)
 }
 

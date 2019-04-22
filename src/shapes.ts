@@ -1,3 +1,5 @@
+/// <reference path="vector.ts" />
+
 const SHAPE_AABB = 0
 const SHAPE_CIRCLE = 1
 const SHAPE_POLYGON = 2
@@ -5,8 +7,19 @@ const SHAPE_COUNT = 3
 
 const SHAPE_DEBUG = true
 
-class AABB {
-  constructor(size) {
+interface Shape {
+  type: number
+
+  draw(): void
+  computeMass(body: Body, density: number): void
+  isInside(point: Vector): boolean
+}
+
+class AABB implements Shape {
+  type: number
+  size: Vector
+
+  constructor(size: Vector) {
     this.type = SHAPE_AABB
     this.size = size || new Vector(20, 20)
   }
@@ -15,10 +28,23 @@ class AABB {
     let min = this.size.div(2)
     rect(min.x, min.y, this.size.x, this.size.y)
   }
+
+  computeMass(body: Body, density: number) {
+    return this.size.x * this.size.y * density
+  }
+
+  isInside(point: Vector): boolean {
+    let halfWidth = this.size.x / 2
+    let halfHeight = this.size.y / 2
+    return point.x >= -halfWidth && point.x <= halfWidth && point.y >= -halfHeight && point.y <= halfHeight
+  }
 }
 
-class Circle {
-  constructor(radius) {
+class Circle implements Shape {
+  type: number
+  radius: number
+
+  constructor(radius: number) {
     this.type = SHAPE_CIRCLE
     this.radius = radius || 20
   }
@@ -30,21 +56,22 @@ class Circle {
     }
   }
   
-  computeMass(body, density) {
+  computeMass(body: Body, density: number) {
     body.mass = PI * sq(this.radius) * density
     body.invMass = (body.mass != 0) ? 1 / body.mass : 0
     body.inertia = body.mass * sq(this.radius)
     body.invInertia = (body.inertia != 0) ? 1 / body.inertia : 0
   }
   
-  isInside(point) {
+  isInside(point: Vector) {
     return point.length() <= this.radius
   }
 }
 
 
-class Polygon {
-  static rect(w, h) {
+class Polygon implements Shape {
+  
+  static rect(w: number, h: number) {
     const halfWidth = w / 2
     const halfHeight = h / 2
     return new Polygon([
@@ -55,7 +82,11 @@ class Polygon {
     ])
   }
 
-  constructor(verts) {
+  type: number
+  vertices: Vector[]
+  normals: Vector[]
+
+  constructor(verts: Vector[]) {
     if (!Array.isArray(verts)) {
       throw "PolygonError: verts must be an array"
     }
@@ -74,11 +105,11 @@ class Polygon {
     }
   }
 
-  get vertexCount() {
+  get vertexCount(): number {
     return this.vertices.length
   }
  
-  computeMass(body, density) {
+  computeMass(body: Body, density: number) {
     let c = new Vector()
     let area = 0
     let I = 0
@@ -130,9 +161,9 @@ class Polygon {
     pop()
   }
 
-  getSupport(direction) {
+  getSupport(direction: Vector): Vector {
     let bestProjection = -Number.MAX_VALUE
-    let bestVertex = null
+    let bestVertex: Vector = this.vertices[0]
 
     for (let i = 0; i < this.vertexCount; i++) {
       let vertex = this.vertices[i]
@@ -144,10 +175,10 @@ class Polygon {
       }
     }
 
-    return bestVertex
+    return bestVertex 
   }
   
-  isInside(point) {
+  isInside(point: Vector) {
     for (let i = 0; i < this.vertices.length; i++) {
       let s = this.normals[i].dot(point.sub(this.vertices[i]))
       if (s > 0) {

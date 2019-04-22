@@ -1,10 +1,8 @@
-class CollisionCircleCircle {
-  handleCollision(manifold, a, b) {
-    let A = a.shape
-    let B = b.shape
-    A.body = a
-    B.body = b
-    
+class CollisionCircleCircle implements CollisionHandler {
+  handleCollision(manifold: Manifold, a: Body, b: Body) {
+    let A = a.shape as Circle
+    let B = b.shape as Circle
+        
     let normal = b.position.sub(a.position)
     
     let dist_sqr = normal.lengthSquared()

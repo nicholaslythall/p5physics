@@ -1,11 +1,25 @@
-const CR = [
+const CR: (CollisionHandler | null)[] = [
   null, null, null,
   null, new CollisionCircleCircle(), new CollisionCirclePolygon(),
   null, new CollisionPolygonCircle(), new CollisionPolygonPolygon()
 ]
 
+
+const PENETRATION_ALLOWANCE = 0.05
+const PENETRATION_CORRECTION = 0.4
+
 class Manifold {
-  constructor(a, b) {
+  a: Body
+  b: Body
+  penetration: number
+  normal: Vector
+  contacts: Vector[]
+  contactCount: number
+  e: number
+  df: number
+  sf: number
+
+  constructor(a: Body, b: Body) {
     this.a = a
     this.b = b
     this.penetration = 0
@@ -22,15 +36,19 @@ class Manifold {
     let bShape = this.b.shape.type
     
     let handler = CR[aShape * SHAPE_COUNT + bShape]
-    handler.handleCollision(this, this.a, this.b)
+    if (handler !== null) {
+      handler.handleCollision(this, this.a, this.b)
+    } else {
+      throw new Error(`No handler for types ${aShape} and ${ bShape }`)
+    }
   }
   
   initialize() {
     this.e = min(this.a.restitution, this.b.restitution)
-    for (let i = 0; i < this.contacts.count; i++) {
+    for (let i = 0; i < this.contacts.length; i++) {
       // calculate radii from center of mass to contact
-      let ra = contacts[i].sub(this.a.position)
-      let rb = contacts[i].sub(this.b.position)
+      let ra = this.contacts[i].sub(this.a.position)
+      let rb = this.contacts[i].sub(this.b.position)
       
       let rv = this.b.velocity.add(rb.scalarCross(this.b.angularVelocity))
         .sub(this.a.velocity).sub(ra.scalarCross(this.a.angularVelocity))
@@ -84,191 +102,10 @@ class Manifold {
   }
     
   positionalCorrection() {
-    let correction = max(this.penetration - PENETRATION_ALLOWANCE) /
+    let correction = max(this.penetration - PENETRATION_ALLOWANCE, 0) /
         (this.a.invMass + this.b.invMass) * PENETRATION_CORRECTION
     
     this.a.position = this.a.position.add(this.normal.mult(-this.a.invMass * correction))
     this.b.position = this.b.position.add(this.normal.mult(this.b.invMass * correction))
   }
-}
-
-const PENETRATION_ALLOWANCE = 0.05
-const PENETRATION_CORRECTION = 0.4
-    
-class Collision {
-  constructor(a, b, manifold) {
-    this.a = a
-    this.b = b
-    this.manifold = manifold
-  }
-}
-
-function aabbVsAABB(a, b) {
-  let n = b.position.sub(a.position)
-
-  let aExtent = a.size.div(2)
-  let bExtent = b.size.div(2)
-
-  let overlapX = aExtent.x + bExtent.x - abs(n.x)
-
-  if (overlapX <= 0) {
-    return null
-  }
-
-  let overlapY = aExtent.y + bExtent.y - abs(n.y)
-
-  if (overlapY <= 0) {
-    return null
-  }
-
-  let manifold = new Manifold(a, b)
-  
-  if (overlapX < overlapY) {
-    if (n.x < 0) {
-      manifold.normal = new Vector(-1, 0)
-    } else {
-      manifold.normal = new Vector(1, 0)
-    }
-    manifold.penetration = overlapX
-  } else {
-    if (n.y < 0) {
-      manifold.normal = new Vector(0, -1)
-    } else {
-      manifold.normal = new Vector(0, 1)
-    }
-    manifold.penetration = overlapY
-  }
-
-  return manifold
-}
-
-function circleVsCircle(a, b) {
-  let totalRadius = a.radius + b.radius
-  let n = b.position.sub(a.position)
-
-  if (sq(totalRadius) < n.lengthSquared()) {
-    return null
-  }
-
-  // Circles have collieded, now compute manifold
-  let d = n.length()
-  if (d != 0) {
-    return new Manifold(
-      a,
-      b,
-      a.radius + b.radius - d,
-      n.div(d)
-    )
-  } else {
-    return new Manifold(
-      a,
-      b,
-      a.radius,
-      new Vector(1, 0)
-    )
-  }
-}
-
-function aabbVsCircle(a, b) {
-  let n = b.position.sub(a.position)
-
-  let aExtent = a.size.div(2)
-
-  let closest = new Vector(
-    clamp(-aExtent.x, aExtent.x, n.x),
-    clamp(-aExtent.y, aExtent.y, n.y)
-  )
-
-  let inside = false
-
-  if (n.equals(closest)) {
-    inside = true
-
-    if (abs(n.x) > abs(n.y)) {
-      if (closest.x > 0) {
-        closest.x = aExtent.x
-      } else {
-        closest.x = -aExtent.x
-      }
-    } else {
-      if (closest.y > 0) {
-        closest.y = aExtent.y
-      } else {
-        closest.y = -aExtent.y
-      }
-    }
-  }
-
-  let normal = n.sub(closest)
-  let distanceSquared = normal.lengthSquared()
-  let r = b.radius
-
-  if (distanceSquared > sq(r) && !inside) {
-    return null
-  }
-
-  let distance = sqrt(distanceSquared)
-
-  let manifold = new Manifold(a, b, r - distance)
-
-  if (inside) {
-    ellipse(b.position.x, b.position.y, 20)
-    manifold.normal = closest.unit()
-  } else {
-    manifold.normal = normal.unit()
-  }
-
-  return manifold
-}
-
-function circleVSAABB(a, b) {
-  let manifold = aabbVsCircle(b, a)
-  if (manifold === null) {
-    return null
-  }
-  
-  manifold.normal = manifold.normal.neg()
-  let aa = manifold.a
-  let bb = manifold.b
-  
-  manifold.a = bb
-  manifold.b = aa
-  
-  return manifold
-}
-
-function resolveCollision(a, b, normal) {
-  
-  // Calculate the relative velocity between the bodies
-  let relativeVelocity = b.velocity.sub(a.velocity)
-
-  // Calculate the relative velocity in terms of the collision normal
-  let velAlongNormal = relativeVelocity.dot(normal)
-
-  // Do not resolve if velocities are separating
-  if (velAlongNormal > 0) {
-    return
-  }
-
-  // Calculate restitution
-  let e = min(a.restitution, b.restitution)
-
-  // Calculate the impulse scalar
-  let j = -(1 + e) * velAlongNormal
-  j /= a.invMass + b.invMass
-
-  // Apply the impulse
-  let impulse = normal.mult(j)
-  a.velocity = a.velocity.sub(impulse.mult(a.invMass))
-  b.velocity = b.velocity.add(impulse.mult(b.invMass))
-    
-  // TODO Friction
-}
-
-function positionalCorrection(a, b, normal, penetration) {
-  let percent = 0.2
-  let slop = 0.01
-  let correction = normal.mult(max(penetration - slop, 0) / (a.invMass + b.invMass) * percent)
-  a.position = a.position.sub(correction.mult(a.invMass))
-  b.position = b.position.add(correction.mult(b.invMass))
 }

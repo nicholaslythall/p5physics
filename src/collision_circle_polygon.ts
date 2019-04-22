@@ -1,16 +1,14 @@
 const EPSILON = 0.0001
 
-class CollisionCirclePolygon {
-  handleCollision(manifold, circleBody, polygonBody) {
-    const circle = circleBody.shape
-    const polygon = polygonBody.shape
-    circle.body = circleBody
-    polygon.body = polygonBody
-
+class CollisionCirclePolygon implements CollisionHandler {
+  handleCollision(manifold: Manifold, circleBody: Body, polygonBody: Body) {
+    const circle = circleBody.shape as Circle
+    const polygon = polygonBody.shape as Polygon
+    
     manifold.contactCount = 0
 
     // Transform circle center into polygon space
-    let center = circle.body.position.sub(polygon.body.position).rotate(-polygon.body.orientation)
+    let center = circleBody.position.sub(polygonBody.position).rotate(-polygonBody.orientation)
 
     // Find edge with minimum penetration
     // Exact concept as using support pointsin polygon vs polygon
@@ -83,12 +81,13 @@ class CollisionCirclePolygon {
   }
 }
 
-class CollisionPolygonCircle {
+class CollisionPolygonCircle implements CollisionHandler {
+  handler: CollisionCirclePolygon
   constructor() {
     this.handler = new CollisionCirclePolygon()
   }
 
-  handleCollision(manifold, polygon, circle) {
+  handleCollision(manifold: Manifold, polygon: Body, circle: Body) {
     this.handler.handleCollision(manifold, circle, polygon)
     manifold.normal = manifold.normal.neg()
   }

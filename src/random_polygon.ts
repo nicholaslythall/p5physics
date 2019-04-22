@@ -1,10 +1,10 @@
-function randomPolygon(count) {
+function randomPolygon(count: number) {
   const vertexCount = (count != undefined) ? count: round(random(3, 10))
   
-  const randomX = []
-  const randomY = []
+  const randomX: number[] = []
+  const randomY: number[] = []
   
-  for (i = 0; i < vertexCount; i++) {
+  for (let i = 0; i < vertexCount; i++) {
     randomX.push(random(-50, 50))
     randomY.push(random(-50, 50))
   }
@@ -12,10 +12,10 @@ function randomPolygon(count) {
   randomX.sort((lhs, rhs) => { return lhs - rhs })
   randomY.sort((lhs, rhs) => { return lhs - rhs })
  
-  const minX = randomX.shift()
-  const minY = randomY.shift()
-  const maxX = randomX.pop()
-  const maxY = randomY.pop()
+  const minX: number = randomX.shift() as number
+  const minY: number = randomY.shift() as number
+  const maxX: number = randomX.pop() as number
+  const maxY: number = randomY.pop() as number
   
   const forwardX = [minX]
   const backwardX = [minX]
@@ -24,15 +24,15 @@ function randomPolygon(count) {
   
   while (randomX.length > 0) {
     if (random([0, 1]) === 0) {
-      forwardX.push(randomX.pop())    
+      forwardX.push(randomX.pop() as number)    
     } else {
-      backwardX.push(randomX.pop())
+      backwardX.push(randomX.pop() as number)
     }
     
     if (random([0,1]) === 0) {
-      forwardY.push(randomY.pop())    
+      forwardY.push(randomY.pop() as number)
     } else {
-      backwardY.push(randomY.pop())
+      backwardY.push(randomY.pop() as number)
     }
   }
   
@@ -41,8 +41,8 @@ function randomPolygon(count) {
   forwardY.push(maxY)
   backwardY.push(maxY)
   
-  const componentsX = []
-  const componentsY = []
+  const componentsX: number[] = []
+  const componentsY: number[] = []
   
   for (let i = 0; i < forwardX.length - 1; i++) {
     componentsX.push(forwardX[i+1] - forwardX[i])
@@ -65,7 +65,7 @@ function randomPolygon(count) {
   componentsX.sort(() => random() - 0.5)
   componentsY.sort(() => random() - 0.5)
   
-  const vectors = []
+  const vectors: Vector[] = []
   for (let i = 0; i < vertexCount; i++) {
     vectors.push(new Vector(componentsX[i], componentsY[i]))
   }
@@ -73,7 +73,7 @@ function randomPolygon(count) {
   vectors.sort((lhs, rhs) => atan2(lhs.x, lhs.y) - atan2(rhs.x, rhs.y))
   
   let current = new Vector()
-  const vertices = []
+  const vertices: Vector[] = []
   
   let polyMinX = Number.MAX_VALUE
   let polyMinY = Number.MAX_VALUE

@@ -3,7 +3,7 @@ let dt = 1 / fps
 let frameStart = 0
 let accumulator = 0
 
-let bodies = []
+let bodies: Body[] = []
 
 
 const gravity = new Vector(0, 100)
@@ -27,39 +27,31 @@ function testScene() {
 
 }
 
-Object.prototype.let = function(block) {
-  block(this)
-  return this
-}
-
 function randomScene() {
-  bodies.push(new Body(Polygon.rect(width, 50), 0).let(it => {
-    it.position.x = width / 2
-    it.position.y = height - 25
-  }))
+
+  let wall = new Body(Polygon.rect(width, 50), 0)
+  wall.position = new Vector(width / 2, height - 25)
+  bodies.push(wall)
   
-  bodies.push(new Body(Polygon.rect(width, 50), 0).let(it => {
-    it.position.x = width / 2
-    it.position.y = 25
-  }))
+  wall = new Body(Polygon.rect(width, 50), 0)
+  wall.position = new Vector(width / 2, 25)
+  bodies.push(wall)
   
-  bodies.push(new Body(Polygon.rect(50, height), 0).let(it => {
-    it.position.x = 25
-    it.position.y = height / 2
-  }))
+  wall = new Body(Polygon.rect(50, height), 0)
+  wall.position = new Vector(25, height / 2)
+  bodies.push(wall)
   
-  bodies.push(new Body(Polygon.rect(50, height), 0).let(it => {
-    it.position.x = width - 25
-    it.position.y = height / 2
-  }))
+  wall = new Body(Polygon.rect(50, height), 0)
+  wall.position = new Vector(width - 25, height / 2)
+  bodies.push(wall)
   
   for (let i = 0; i < 20; i++) {
     let position = new Vector(random(100, width - 200), random(100, height - 200))
 
-    let shape
+    let shape: Shape
     let r = random(2) | 0
     if (r == 0) {
-    shape = new Circle(random(25, 50))
+      shape = new Circle(random(25, 50))
     } else {
       shape = Polygon.rect(random(50, 100), random(50, 100))
     }
@@ -101,12 +93,12 @@ function draw() {
   })
 }
 
-let springBody = null
-let springPos = null
+let springBody: Body | null = null
+let springPos: Vector | null = null
 
-function updatePhysics(dt) {
+function updatePhysics(dt: number) {
   // Generate new collision info
-  let contacts = []
+  let contacts: Manifold[] = []
   for (let i = 0; i < bodies.length; i++) {
     let a = bodies[i]
 
@@ -141,7 +133,7 @@ function updatePhysics(dt) {
     springBody = null
   }
     
-  if (springBody !== null) {
+  if (springBody !== null && springPos !== null) {
     let pos = springBody.position
     let a = springPos.rotate(springBody.orientation).add(springBody.position)
     let delta = new Vector(mouseX, mouseY).sub(a)
