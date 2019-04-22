@@ -1,4 +1,4 @@
-let fps = 30
+let fps = 60
 let dt = 1 / fps
 let frameStart = 0
 let accumulator = 0
@@ -176,8 +176,10 @@ function updatePhysics(dt) {
   }
 
   // Solve collision
-  for (let i = 0; i < contacts.length; i++) {
-    contacts[i].applyImpulse()
+  for(let j = 0; j < 10; j++) {
+    for (let i = 0; i < contacts.length; i++) {
+      contacts[i].applyImpulse()
+    }
   }
 
   // Integrate velocities

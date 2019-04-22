@@ -113,19 +113,19 @@ class Polygon {
     }
     endShape(CLOSE)
 
-    for (let i = 0; i < this.vertexCount; i++) {
-      let vertex = this.vertices[i]
-      let faceHalf = vertex.add(this.vertices[(i + 1) % this.vertexCount].sub(this.vertices[i]).mult(0.5))
-      let normal = this.normals[i].mult(10)
-      // stroke("#FF0")
-      // ellipse(faceHalf.x, faceHalf.y, 20)
-      stroke("#0F0")
-      line(faceHalf.x, faceHalf.y, faceHalf.x + normal.x, faceHalf.y + normal.y)
-      fill(0)
-      textAlign(CENTER, CENTER)
-      text(i, faceHalf.x - normal.x, faceHalf.y - normal.y)
+    // for (let i = 0; i < this.vertexCount; i++) {
+    //   let vertex = this.vertices[i]
+    //   let faceHalf = vertex.add(this.vertices[(i + 1) % this.vertexCount].sub(this.vertices[i]).mult(0.5))
+    //   let normal = this.normals[i].mult(10)
+    //   // stroke("#FF0")
+    //   // ellipse(faceHalf.x, faceHalf.y, 20)
+    //   stroke("#0F0")
+    //   line(faceHalf.x, faceHalf.y, faceHalf.x + normal.x, faceHalf.y + normal.y)
+    //   fill(0)
+    //   textAlign(CENTER, CENTER)
+    //   text(i, faceHalf.x - normal.x, faceHalf.y - normal.y)
 
-    }
+    // }
 
     pop()
   }
