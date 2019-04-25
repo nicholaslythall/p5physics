@@ -1,6 +1,9 @@
-/// <reference path="vector.ts" />
+import { Vector } from "./vector"
+import { Shape } from "./shapes"
+import { unqiueId } from "./util"
+import p5 = require("p5");
 
-class Body {
+export class Body {
   id: number
   position: Vector
   velocity: Vector
@@ -59,16 +62,16 @@ class Body {
     this.torque = 0
   }
 
-  draw() {
-    push()
-    noFill()
-    stroke(0)
+  draw(p: p5) {
+    p.push()
+    p.noFill()
+    p.stroke(0)
     
-    translate(this.position.x, this.position.y)
-    rotate(this.orientation)
+    p.translate(this.position.x, this.position.y)
+    p.rotate(this.orientation)
       
-    this.shape.draw()
+    this.shape.draw(p)
     
-    pop()
+    p.pop()
   }
 }

@@ -1,21 +1,26 @@
-/// <reference path="vector.ts" />
+import { Vector } from "./vector"
+import { Body } from "./body"
+import p5 = require("p5");
 
-const SHAPE_AABB = 0
-const SHAPE_CIRCLE = 1
-const SHAPE_POLYGON = 2
-const SHAPE_COUNT = 3
+const sq = (x: number) => x * x
+const PI = Math.PI
+
+export const SHAPE_AABB = 0
+export const SHAPE_CIRCLE = 1
+export const SHAPE_POLYGON = 2
+export const SHAPE_COUNT = 3
 
 const SHAPE_DEBUG = true
 
-interface Shape {
+export interface Shape {
   type: number
 
-  draw(): void
+  draw(p: p5): void
   computeMass(body: Body, density: number): void
   isInside(point: Vector): boolean
 }
 
-class AABB implements Shape {
+export class AABB implements Shape {
   type: number
   size: Vector
 
@@ -24,9 +29,9 @@ class AABB implements Shape {
     this.size = size || new Vector(20, 20)
   }
 
-  draw() {
+  draw(p: p5) {
     let min = this.size.div(2)
-    rect(min.x, min.y, this.size.x, this.size.y)
+    p.rect(min.x, min.y, this.size.x, this.size.y)
   }
 
   computeMass(body: Body, density: number) {
@@ -40,7 +45,7 @@ class AABB implements Shape {
   }
 }
 
-class Circle implements Shape {
+export class Circle implements Shape {
   type: number
   radius: number
 
@@ -49,10 +54,10 @@ class Circle implements Shape {
     this.radius = radius || 20
   }
 
-  draw() {
-    ellipse(0, 0, this.radius)
+  draw(p: p5) {
+    p.ellipse(0, 0, this.radius)
     if (SHAPE_DEBUG) {
-      line(0, 0, this.radius, 0)
+      p.line(0, 0, this.radius, 0)
     }
   }
   
@@ -69,7 +74,7 @@ class Circle implements Shape {
 }
 
 
-class Polygon implements Shape {
+export class Polygon implements Shape {
   
   static rect(w: number, h: number) {
     const halfWidth = w / 2
@@ -136,13 +141,13 @@ class Polygon implements Shape {
     body.invInertia = (body.inertia != 0) ? 1 / body.inertia : 0
   }
   
-  draw() {
-    push()
-    beginShape()
+  draw(p: p5) {
+    p.push()
+    p.beginShape()
     for (let v of this.vertices) {
-      vertex(v.x, v.y)
+      p.vertex(v.x, v.y)
     }
-    endShape(CLOSE)
+    p.endShape(p.CLOSE)
 
     // for (let i = 0; i < this.vertexCount; i++) {
     //   let vertex = this.vertices[i]
@@ -158,7 +163,7 @@ class Polygon implements Shape {
 
     // }
 
-    pop()
+    p.pop()
   }
 
   getSupport(direction: Vector): Vector {

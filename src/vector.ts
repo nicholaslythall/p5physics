@@ -1,4 +1,9 @@
-class Vector {
+let sqrt = Math.sqrt
+let sq = (x: number) => x * x
+let cos = Math.cos
+let sin = Math.sin
+
+export class Vector {
   x: number
   y: number
   
@@ -9,7 +14,7 @@ class Vector {
     if (!isFinite(x) || !isFinite(y)) {
       let error = new VectorError("x and y must be numbers, was (" + x + ", " + y + ")")
       
-      print(error.stack)
+      console.log(error.stack)
       
       throw error
     }
@@ -19,7 +24,7 @@ class Vector {
   }
   
   length() {
-    return sqrt(sq(this.x) + sq(this.y));
+      return sqrt(sq(this.x) + sq(this.y));
   }
   
   lengthSquared() {

@@ -1,4 +1,13 @@
-class CollisionCircleCircle implements CollisionHandler {
+import { CollisionHandler } from "./CollisionHandler"
+import { Manifold } from "./collisions"
+import { Body } from "./body"
+import { Circle } from "./shapes"
+import { Vector } from "./vector";
+
+let sq = (x: number) => x * x
+let sqrt = Math.sqrt
+
+export class CollisionCircleCircle implements CollisionHandler {
   handleCollision(manifold: Manifold, a: Body, b: Body) {
     let A = a.shape as Circle
     let B = b.shape as Circle

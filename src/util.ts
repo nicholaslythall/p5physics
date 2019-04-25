@@ -1,10 +1,10 @@
-function clamp(minimum: number, maximum: number, value: number) {
-  return min(max(minimum, value), maximum)
+export function clamp(minimum: number, maximum: number, value: number) {
+  return Math.min(Math.max(minimum, value), maximum)
 }
 
 let lastId = 0
 
-function unqiueId() {
+export function unqiueId() {
   const id = lastId
   lastId++
   return id

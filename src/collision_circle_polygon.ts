@@ -1,6 +1,13 @@
+import { CollisionHandler } from "./CollisionHandler";
+import { Manifold } from "./collisions";
+import { Circle, Polygon } from "./shapes";
+import { Body } from "./body"
+
 const EPSILON = 0.0001
 
-class CollisionCirclePolygon implements CollisionHandler {
+let sq = (x: number) => x * x
+
+export class CollisionCirclePolygon implements CollisionHandler {
   handleCollision(manifold: Manifold, circleBody: Body, polygonBody: Body) {
     const circle = circleBody.shape as Circle
     const polygon = polygonBody.shape as Polygon
@@ -81,7 +88,7 @@ class CollisionCirclePolygon implements CollisionHandler {
   }
 }
 
-class CollisionPolygonCircle implements CollisionHandler {
+export class CollisionPolygonCircle implements CollisionHandler {
   handler: CollisionCirclePolygon
   constructor() {
     this.handler = new CollisionCirclePolygon()

@@ -1,14 +1,24 @@
+import { Vector } from "./vector"
+import { Body } from "./body"
+import { SHAPE_COUNT } from "./shapes"
+import { CollisionHandler } from "./CollisionHandler";
+import { CollisionCircleCircle } from "./collision_circle_circle";
+import { CollisionPolygonCircle, CollisionCirclePolygon } from "./collision_circle_polygon";
+import { CollisionPolygonPolygon } from "./collision_polygon_polygon";
+
 const CR: (CollisionHandler | null)[] = [
   null, null, null,
   null, new CollisionCircleCircle(), new CollisionCirclePolygon(),
   null, new CollisionPolygonCircle(), new CollisionPolygonPolygon()
 ]
 
+const min = Math.min
+const max = Math.max
 
 const PENETRATION_ALLOWANCE = 0.05
 const PENETRATION_CORRECTION = 0.4
 
-class Manifold {
+export class Manifold {
   a: Body
   b: Body
   penetration: number
@@ -65,7 +75,6 @@ class Manifold {
     let b = this.b
     
     if (a.invMass === 0 && b.invMass === 0) {
-      print("here")
       a.velocity = new Vector()
       b.velocity = new Vector()
     }

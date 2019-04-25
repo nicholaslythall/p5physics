@@ -1,3 +1,9 @@
+import { CollisionHandler } from "./CollisionHandler";
+import { Manifold } from "./collisions";
+import { Polygon } from "./shapes";
+import { Body } from "./body"
+import { Vector } from "./vector";
+
 const BIAS_RELATIVE = 0.95
 const BIAS_ABSOLUTE = 0.01
 
@@ -5,7 +11,7 @@ function gt(a: number, b: number) {
   return a >= b * BIAS_RELATIVE + a * BIAS_ABSOLUTE
 }
 
-class CollisionPolygonPolygon implements CollisionHandler {
+export class CollisionPolygonPolygon implements CollisionHandler {
   handleCollision(manifold: Manifold, a: Body, b: Body) {
     const shapeA = a.shape as Polygon
     const shapeB = b.shape as Polygon
