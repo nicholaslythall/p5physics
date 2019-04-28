@@ -3,7 +3,7 @@ import { Manifold } from "./collisions";
 import { Circle, Polygon } from "./shapes";
 import { Body } from "./body"
 
-const EPSILON = 0.0001
+export const EPSILON = 0.0001
 
 let sq = (x: number) => x * x
 
@@ -11,7 +11,7 @@ export class CollisionCirclePolygon implements CollisionHandler {
   handleCollision(manifold: Manifold, circleBody: Body, polygonBody: Body) {
     const circle = circleBody.shape as Circle
     const polygon = polygonBody.shape as Polygon
-    
+
     manifold.contactCount = 0
 
     // Transform circle center into polygon space
