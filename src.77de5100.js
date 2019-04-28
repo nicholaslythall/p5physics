@@ -84755,6 +84755,8 @@ var util_1 = require("./util");
 
 var Body = function () {
   function Body(shape, density) {
+    this.staticFriction = 0.5;
+    this.dynamicFriction = 0.3;
     this.mass = 0;
     this.invMass = 0;
     this.inertia = 0;
@@ -84794,14 +84796,8 @@ var Body = function () {
     this.torque = 0;
   };
 
-  Body.prototype.draw = function (p) {
-    p.push();
-    p.noFill();
-    p.stroke(0);
-    p.translate(this.position.x, this.position.y);
-    p.rotate(this.orientation);
-    this.shape.draw(p);
-    p.pop();
+  Body.prototype.draw = function () {
+    this.shape.draw();
   };
 
   return Body;
@@ -84826,7 +84822,7 @@ exports.SHAPE_AABB = 0;
 exports.SHAPE_CIRCLE = 1;
 exports.SHAPE_POLYGON = 2;
 exports.SHAPE_COUNT = 3;
-var SHAPE_DEBUG = true;
+exports.SHAPE_DEBUG = true;
 
 var AABB = function () {
   function AABB(size) {
@@ -84834,10 +84830,7 @@ var AABB = function () {
     this.size = size || new vector_1.Vector(20, 20);
   }
 
-  AABB.prototype.draw = function (p) {
-    var min = this.size.div(2);
-    p.rect(min.x, min.y, this.size.x, this.size.y);
-  };
+  AABB.prototype.draw = function () {};
 
   AABB.prototype.computeMass = function (body, density) {
     return this.size.x * this.size.y * density;
@@ -84860,13 +84853,7 @@ var Circle = function () {
     this.radius = radius || 20;
   }
 
-  Circle.prototype.draw = function (p) {
-    p.ellipse(0, 0, this.radius);
-
-    if (SHAPE_DEBUG) {
-      p.line(0, 0, this.radius, 0);
-    }
-  };
+  Circle.prototype.draw = function () {};
 
   Circle.prototype.computeMass = function (body, density) {
     body.mass = PI * sq(this.radius) * density;
@@ -84919,6 +84906,8 @@ var Polygon = function () {
     configurable: true
   });
 
+  Polygon.prototype.draw = function () {};
+
   Polygon.prototype.computeMass = function (body, density) {
     var c = new vector_1.Vector();
     var area = 0;
@@ -84941,19 +84930,6 @@ var Polygon = function () {
     body.invMass = body.mass != 0 ? 1 / body.mass : 0;
     body.inertia = I * density;
     body.invInertia = body.inertia != 0 ? 1 / body.inertia : 0;
-  };
-
-  Polygon.prototype.draw = function (p) {
-    p.push();
-    p.beginShape();
-
-    for (var _i = 0, _a = this.vertices; _i < _a.length; _i++) {
-      var v = _a[_i];
-      p.vertex(v.x, v.y);
-    }
-
-    p.endShape(p.CLOSE);
-    p.pop();
   };
 
   Polygon.prototype.getSupport = function (direction) {
@@ -85043,7 +85019,7 @@ exports.CollisionCircleCircle = CollisionCircleCircle;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var EPSILON = 0.0001;
+exports.EPSILON = 0.0001;
 
 var sq = function sq(x) {
   return x * x;
@@ -85076,7 +85052,7 @@ var CollisionCirclePolygon = function () {
     var v1 = polygon.vertices[faceNormal];
     var v2 = polygon.vertices[(faceNormal + 1) % polygon.vertexCount];
 
-    if (separation < EPSILON) {
+    if (separation < exports.EPSILON) {
       manifold.contactCount = 1;
       manifold.normal = polygon.normals[faceNormal].rotate(polygonBody.orientation).neg();
       manifold.contacts[0] = manifold.normal.mult(circle.radius).add(circleBody.position);
@@ -85346,6 +85322,12 @@ var collision_polygon_polygon_1 = require("./collision_polygon_polygon");
 var CR = [null, null, null, null, new collision_circle_circle_1.CollisionCircleCircle(), new collision_circle_polygon_1.CollisionCirclePolygon(), null, new collision_circle_polygon_1.CollisionPolygonCircle(), new collision_polygon_polygon_1.CollisionPolygonPolygon()];
 var min = Math.min;
 var max = Math.max;
+var sqrt = Math.sqrt;
+
+var sq = function sq(x) {
+  return x * x;
+};
+
 var PENETRATION_ALLOWANCE = 0.05;
 var PENETRATION_CORRECTION = 0.4;
 
@@ -85358,8 +85340,8 @@ var Manifold = function () {
     this.contacts = [];
     this.contactCount = 0;
     this.e = 0;
-    this.df = 0;
-    this.sf = 0;
+    this.dynamicFriction = 0;
+    this.staticFriction = 0;
   }
 
   Manifold.prototype.solve = function () {
@@ -85376,6 +85358,8 @@ var Manifold = function () {
 
   Manifold.prototype.initialize = function () {
     this.e = min(this.a.restitution, this.b.restitution);
+    this.staticFriction = sqrt(sq(this.a.staticFriction) + sq(this.b.staticFriction));
+    this.dynamicFriction = sqrt(sq(this.a.dynamicFriction) + sq(this.b.dynamicFriction));
 
     for (var i = 0; i < this.contacts.length; i++) {
       var ra = this.contacts[i].sub(this.a.position);
@@ -85416,6 +85400,25 @@ var Manifold = function () {
       var impulse = this.normal.mult(j);
       a.applyImpulse(impulse.neg(), ra);
       b.applyImpulse(impulse, rb);
+      var t = rv.add(this.normal.mult(rv.dot(this.normal))).unit();
+      var jt = rv.dot(t);
+      jt /= invMassSum;
+      jt /= this.contactCount;
+
+      if (Math.abs(jt) < collision_circle_polygon_1.EPSILON) {
+        return;
+      }
+
+      var tangentImpulse = void 0;
+
+      if (Math.abs(jt) < j * this.staticFriction) {
+        tangentImpulse = t.mult(jt);
+      } else {
+        tangentImpulse = t.mult(-j * this.dynamicFriction);
+      }
+
+      this.a.applyImpulse(tangentImpulse.neg(), ra);
+      this.b.applyImpulse(tangentImpulse, rb);
     }
   };
 
@@ -85492,6 +85495,26 @@ exports.sketch = function (p) {
     p.ellipseMode(p.RADIUS);
     p.createCanvas(p.windowWidth, p.windowHeight);
     p.frameRate(fps);
+
+    shapes_1.Circle.prototype.draw = function () {
+      p.ellipse(0, 0, this.radius);
+
+      if (shapes_1.SHAPE_DEBUG) {
+        p.line(0, 0, this.radius, 0);
+      }
+    };
+
+    shapes_1.Polygon.prototype.draw = function () {
+      p.beginShape();
+
+      for (var _i = 0, _a = this.vertices; _i < _a.length; _i++) {
+        var v = _a[_i];
+        p.vertex(v.x, v.y);
+      }
+
+      p.endShape(p.CLOSE);
+    };
+
     randomScene();
   };
 
@@ -85507,7 +85530,13 @@ exports.sketch = function (p) {
     }
 
     bodies.forEach(function (body) {
-      body.draw(p);
+      p.push();
+      p.translate(body.position.x, body.position.y);
+      p.rotate(body.orientation);
+      p.noFill();
+      p.stroke(0);
+      body.draw();
+      p.pop();
     });
   };
 
@@ -85659,7 +85688,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52281" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50847" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
